@@ -87,16 +87,25 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: '11'
+        
+        runs-on: ubuntu-latest
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Setup SSH Keys
-      if: ${{ startsWith(github.event.inputs.MANIFEST_URL, 'git@github.com') || 
-          startsWith(github.event.inputs.DEVICE_TREE_URL, 'git@github.com') ||
-          startsWith(github.event.inputs.COMMON_TREE_URL, 'git@github.com') }}
-      uses: webfactory/ssh-agent@v0.9.0
-      with:
-          ssh-private-key: |
-            ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Create SSH directory and add private key
+      run: |
+          mkdir -p ~/.ssh/
+              echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+              chmod 600 ~/.ssh/id_ed25519
 
+          - name: Add known hosts (if using)
+            run: |
+              echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+              chmod 644 ~/.ssh/known_hosts
+
+          - name: Connect and execute commands via SSH
+            run: |
+              ssh -i ~/.ssh/id_ed25519 user@your_remote_server "ssh sigbin35@github.com/Actions-Twrp-Builder"
     - name: Install repo
       run: |
         mkdir ~/bin
